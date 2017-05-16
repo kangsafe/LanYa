@@ -18,12 +18,12 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -37,7 +37,6 @@ import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.Socket;
-import java.util.ArrayList;
 import java.util.UUID;
 
 import permissions.dispatcher.NeedsPermission;
@@ -111,12 +110,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.search: {
                 adapter.datas.clear();
                 adapter.notifyDataSetChanged();
-                MainActivityPermissionsDispatcher.doSearchWithCheck(this);
+                doSearch();
+//                MainActivityPermissionsDispatcher.doSearchWithCheck(this);
             }
             break;
             case R.id.accept:
-//                accept();
-                getMessage();
+                accept();
+//                getMessage();
                 break;
             case R.id.send:
                 send();
@@ -145,12 +145,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 // 获取到客户端接口
                 clientSocket = selectDevice
                         .createRfcommSocketToServiceRecord(MY_UUID);
-                // 向服务端发送连接
-                clientSocket.connect();
-                // 获取到输出流，向外写数据
-                os = clientSocket.getOutputStream();
-
             }
+            // 向服务端发送连接
+            clientSocket.connect();
+            // 获取到输出流，向外写数据
+            os = clientSocket.getOutputStream();
+
             // 判断是否拿到输出流
             if (os != null) {
                 // 需要发送的信息
@@ -278,7 +278,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         }
                         break;
                     case BluetoothAdapter.ACTION_STATE_CHANGED:
-                        //<editor-fold>
                         state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -1);
                         switch (state) {
                             case BluetoothAdapter.STATE_TURNING_ON:
@@ -338,8 +337,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (selectDevice.getBondState() == BluetoothDevice.BOND_NONE) {
             ClsUtils.pair(selectDevice.getAddress(), "");
         } else if (selectDevice.getBondState() == BluetoothDevice.BOND_BONDED) {
-            //send();
-            sendMessage(position);
+            send();
+//            sendMessage(position);
         }
     }
 
@@ -398,11 +397,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             switch (msg.what) {
                 case startService:
                     setTitle("服务已打开");
-                    Log.i("msg","服务已打开");
+                    Log.i("msg", "服务已打开");
                     break;
                 case getMessageOk:
                     setTitle(msg.obj.toString());
-                    Log.i("msg",msg.obj.toString());
+                    Log.i("msg", msg.obj.toString());
                     break;
                 case sendOver:
                     Toast.makeText(MainActivity.this, "发送成功", Toast.LENGTH_SHORT).show();
@@ -414,7 +413,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     static final String SPP_UUID = "00001101-0000-1000-8000-00805F9B34FB";
 
     private void connect(BluetoothDevice btDev) {
-        UUID uuid = UUID.fromString(SPP_UUID);
+        UUID uuid = MY_UUID;//UUID.fromString(SPP_UUID);
         try {
             clientSocket = btDev.createRfcommSocketToServiceRecord(uuid);
             Log.d("BlueToothTestActivity", "开始连接...");
@@ -429,6 +428,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
+            Log.i("收到", (String) msg.obj);
             // 通过msg传递过来的信息，吐司一下收到的信息
             Toast.makeText(MainActivity.this, (String) msg.obj, Toast.LENGTH_SHORT).show();
         }
